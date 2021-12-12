@@ -34,7 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-@Primary
+//@Primary
 public class OrderServiceImpl implements ExampleService {
     
     @Resource

@@ -45,7 +45,12 @@ public final class ShardingTableBroadcastRoutingEngine implements ShardingRouteE
     private final SchemaMetaData schemaMetaData;
     
     private final SQLStatementContext sqlStatementContext;
-    
+
+    /**
+     * 根据 logicTableName 获取对应的 TableRule，然后根据 TableRule 中的真实 DataNode 构建 RoutingUnit 对象
+     * @param shardingRule sharding rule
+     * @return
+     */
     @Override
     public RouteResult route(final ShardingRule shardingRule) {
         RouteResult result = new RouteResult();
@@ -83,6 +88,7 @@ public final class ShardingTableBroadcastRoutingEngine implements ShardingRouteE
         Collection<RouteUnit> result = new LinkedList<>();
         TableRule tableRule = shardingRule.getTableRule(logicTableName);
         for (DataNode each : tableRule.getActualDataNodes()) {
+            //根据TableRule中的真实DataNode构建RoutingUnit对象
             RouteUnit routeUnit = new RouteUnit(new RouteMapper(each.getDataSourceName(), each.getDataSourceName()), Collections.singletonList(new RouteMapper(logicTableName, each.getTableName())));
             result.add(routeUnit);
         }

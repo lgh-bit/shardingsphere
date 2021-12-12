@@ -39,19 +39,26 @@ import java.util.List;
  */
 @Getter
 public final class SQLRewriteContext {
-    
+
+    // 数据表和列的关系元数据
     private final SchemaMetaData schemaMetaData;
-    
+
+    // SQLStatement 上下文
     private final SQLStatementContext<?> sqlStatementContext;
-    
+
+    //原始SQL
     private final String sql;
-    
+
+    //参数列表
     private final List<Object> parameters;
-    
+
+    //参数构建器
     private final ParameterBuilder parameterBuilder;
-    
+
+    //SQLToken 列表 ,SQLRewriteEngine 是基于 SQLToken 实现了 SQL 改写
     private final List<SQLToken> sqlTokens = new LinkedList<>();
-    
+
+    //SQLToken 生成器
     @Getter(AccessLevel.NONE)
     private final SQLTokenGenerators sqlTokenGenerators = new SQLTokenGenerators();
     

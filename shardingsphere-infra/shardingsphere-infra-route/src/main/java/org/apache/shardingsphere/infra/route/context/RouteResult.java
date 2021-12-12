@@ -36,9 +36,9 @@ import java.util.stream.Collectors;
  */
 @Getter
 public final class RouteResult {
-    
+
     private final Collection<Collection<DataNode>> originalDataNodes = new LinkedList<>();
-    
+
     private final Collection<RouteUnit> routeUnits = new LinkedHashSet<>();
     
     /**

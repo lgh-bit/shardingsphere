@@ -64,14 +64,30 @@ public final class SQLRewriteEntry {
      * @return route unit and SQL rewrite result map
      */
     public SQLRewriteResult rewrite(final String sql, final List<Object> parameters, final RouteContext routeContext) {
+        //构建 SQLRewriteContext
         SQLRewriteContext sqlRewriteContext = createSQLRewriteContext(sql, parameters, routeContext);
-        return routeContext.getRouteResult().getRouteUnits().isEmpty()
-                ? new GenericSQLRewriteEngine().rewrite(sqlRewriteContext) : new RouteSQLRewriteEngine().rewrite(sqlRewriteContext, routeContext.getRouteResult());
+//        return routeContext.getRouteResult().getRouteUnits().isEmpty()
+//                ? new GenericSQLRewriteEngine().rewrite(sqlRewriteContext) :
+//                //构建 ShardingSQLRewriteEngine
+//                new RouteSQLRewriteEngine()
+//                        //执行改写
+//                        .rewrite(sqlRewriteContext, routeContext.getRouteResult());
+        if (routeContext.getRouteResult().getRouteUnits().isEmpty()) {
+            return new GenericSQLRewriteEngine().rewrite(sqlRewriteContext);
+        } else {
+            //执行改写
+            return new RouteSQLRewriteEngine().rewrite(sqlRewriteContext, routeContext.getRouteResult());
+        }
     }
     
     private SQLRewriteContext createSQLRewriteContext(final String sql, final List<Object> parameters, final RouteContext routeContext) {
         SQLRewriteContext result = new SQLRewriteContext(metaData, routeContext.getSqlStatementContext(), sql, parameters);
+        //使用装饰者模式完成各种改写
+        // ShardingSQLRewriteContextDecorator
+        // EncryptSQLRewriteContextDecorator 脱敏
+        // ShadowSQLRewriteContextDecorator
         decorate(decorators, result, routeContext);
+        //生成 SQLTokens
         result.generateSQLTokens();
         return result;
     }

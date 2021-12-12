@@ -32,7 +32,8 @@ import java.util.Collections;
 public abstract class AbstractSQLBuilder implements SQLBuilder {
     
     private final SQLRewriteContext context;
-    
+
+    //拼接SQL
     @Override
     public final String toSQL() {
         if (context.getSqlTokens().isEmpty()) {

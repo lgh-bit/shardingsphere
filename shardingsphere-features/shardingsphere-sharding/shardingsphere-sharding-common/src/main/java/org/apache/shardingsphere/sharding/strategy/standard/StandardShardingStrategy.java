@@ -53,7 +53,10 @@ public final class StandardShardingStrategy implements ShardingStrategy {
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ConfigurationProperties props) {
         RouteValue shardingValue = shardingValues.iterator().next();
         Collection<String> shardingResult = shardingValue instanceof ListRouteValue
-                ? doSharding(availableTargetNames, (ListRouteValue) shardingValue) : doSharding(availableTargetNames, (RangeRouteValue) shardingValue);
+                //如果分片值是一个列表，则执行 BoundaryBasedRangeShardingAlgorithm
+                ? doSharding(availableTargetNames, (ListRouteValue) shardingValue) :
+                //如果分片值是一个范围，则 执行 VolumeBasedRangeShardingAlgorithm
+                doSharding(availableTargetNames, (RangeRouteValue) shardingValue);
         Collection<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
         result.addAll(shardingResult);
         return result;

@@ -62,6 +62,7 @@ public abstract class ResourceManagedExecuteGroupEngine
         List<InputGroup<U>> result = new LinkedList<>();
         int desiredPartitionSize = Math.max(0 == sqlUnits.size() % maxConnectionsSizePerQuery ? sqlUnits.size() / maxConnectionsSizePerQuery : sqlUnits.size() / maxConnectionsSizePerQuery + 1, 1);
         List<List<SQLUnit>> sqlUnitPartitions = Lists.partition(sqlUnits, desiredPartitionSize);
+        //判断是否使用内存归并还是流式归并
         ConnectionMode connectionMode = maxConnectionsSizePerQuery < sqlUnits.size() ? ConnectionMode.CONNECTION_STRICTLY : ConnectionMode.MEMORY_STRICTLY;
         List<C> connections = executionConnection.getConnections(dataSourceName, sqlUnitPartitions.size(), connectionMode);
         int count = 0;

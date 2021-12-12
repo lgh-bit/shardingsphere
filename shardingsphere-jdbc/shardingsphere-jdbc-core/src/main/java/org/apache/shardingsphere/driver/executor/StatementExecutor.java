@@ -61,7 +61,6 @@ public final class StatementExecutor {
     static {
         ShardingSphereServiceLoader.register(RuleMetaDataNotifier.class);
     }
-    
     private final Map<String, DataSource> dataSourceMap;
     
     private final SchemaContexts schemaContexts;

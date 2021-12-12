@@ -41,6 +41,7 @@ public final class NoneShardingStrategy implements ShardingStrategy {
 
     @Override
     public Collection<String> doSharding(final Collection<String> availableTargetNames, final Collection<RouteValue> shardingValues, final ConfigurationProperties props) {
+        //直接返回
         return availableTargetNames;
     }
 }

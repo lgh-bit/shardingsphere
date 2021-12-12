@@ -17,6 +17,7 @@
 
 package org.apache.shardingsphere.infra.route;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.infra.spi.ShardingSphereServiceLoader;
 import org.apache.shardingsphere.infra.spi.order.OrderedSPIRegistry;
 import org.apache.shardingsphere.sql.parser.binder.SQLStatementContextFactory;
@@ -39,6 +40,7 @@ import java.util.Map.Entry;
 /**
  * Data node router.
  */
+@Slf4j
 public final class DataNodeRouter {
     
     static {
@@ -72,6 +74,7 @@ public final class DataNodeRouter {
     public RouteContext route(final SQLStatement sqlStatement, final String sql, final List<Object> parameters) {
         routingHook.start(sql);
         try {
+            log.info("DataNodeRouter route executeRoute className:{}", this.getClass().getSimpleName());
             RouteContext result = executeRoute(sqlStatement, parameters);
             routingHook.finishSuccess(result, metaData.getSchema().getConfiguredSchemaMetaData());
             return result;

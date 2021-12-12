@@ -19,6 +19,7 @@ package org.apache.shardingsphere.sharding.route.engine.type.standard;
 
 import com.google.common.base.Preconditions;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
 import org.apache.shardingsphere.infra.datanode.DataNode;
 import org.apache.shardingsphere.infra.hint.HintManager;
@@ -48,6 +49,7 @@ import java.util.Optional;
  * Sharding standard routing engine.
  */
 @RequiredArgsConstructor
+@Slf4j
 public final class ShardingStandardRoutingEngine implements ShardingRouteEngine {
     
     private final String logicTableName;
@@ -62,12 +64,13 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     public RouteResult route(final ShardingRule shardingRule) {
         return generateRouteResult(getDataNodes(shardingRule, shardingRule.getTableRule(logicTableName)));
     }
-    
+    //组装路由结果
     private RouteResult generateRouteResult(final Collection<DataNode> routedDataNodes) {
         RouteResult result = new RouteResult();
         result.getOriginalDataNodes().addAll(originalDataNodes);
         for (DataNode each : routedDataNodes) {
             result.getRouteUnits().add(
+                    ///根据每个DataNode构建一个RoutingUnit对象
                     new RouteUnit(new RouteMapper(each.getDataSourceName(), each.getDataSourceName()), Collections.singletonList(new RouteMapper(logicTableName, each.getTableName()))));
         }
         return result;
@@ -75,14 +78,17 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     
     private Collection<DataNode> getDataNodes(final ShardingRule shardingRule, final TableRule tableRule) {
         if (isRoutingByHint(shardingRule, tableRule)) {
+            //如果基于Hint进行路由
             return routeByHint(shardingRule, tableRule);
         }
         if (isRoutingByShardingConditions(shardingRule, tableRule)) {
+            //基于分片条件进行路由
             return routeByShardingConditions(shardingRule, tableRule);
         }
+        //执行混合路由
         return routeByMixedConditions(shardingRule, tableRule);
     }
-    
+    //DatabaseShardingStrategy 和 TableShardingStrategy 是否都为 HintShardingStrategy
     private boolean isRoutingByHint(final ShardingRule shardingRule, final TableRule tableRule) {
         return shardingRule.getDatabaseShardingStrategy(tableRule) instanceof HintShardingStrategy && shardingRule.getTableShardingStrategy(tableRule) instanceof HintShardingStrategy;
     }
@@ -90,7 +96,7 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     private Collection<DataNode> routeByHint(final ShardingRule shardingRule, final TableRule tableRule) {
         return route0(shardingRule, tableRule, getDatabaseShardingValuesFromHint(), getTableShardingValuesFromHint());
     }
-    
+    //DatabaseShardingStrategy 和 TableShardingStrategy 是否都不为 HintShardingStrategy
     private boolean isRoutingByShardingConditions(final ShardingRule shardingRule, final TableRule tableRule) {
         return !(shardingRule.getDatabaseShardingStrategy(tableRule) instanceof HintShardingStrategy || shardingRule.getTableShardingStrategy(tableRule) instanceof HintShardingStrategy);
     }
@@ -174,9 +180,11 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     }
     
     private Collection<DataNode> route0(final ShardingRule shardingRule, final TableRule tableRule, final List<RouteValue> databaseShardingValues, final List<RouteValue> tableShardingValues) {
+        //路由DataSource
         Collection<String> routedDataSources = routeDataSources(shardingRule, tableRule, databaseShardingValues);
         Collection<DataNode> result = new LinkedList<>();
         for (String each : routedDataSources) {
+            //路由Table，并完成DataNode集合的拼装
             result.addAll(routeTables(shardingRule, tableRule, each, tableShardingValues));
         }
         return result;
@@ -195,6 +203,8 @@ public final class ShardingStandardRoutingEngine implements ShardingRouteEngine 
     
     private Collection<DataNode> routeTables(final ShardingRule shardingRule, final TableRule tableRule, final String routedDataSource, final List<RouteValue> tableShardingValues) {
         Collection<String> availableTargetTables = tableRule.getActualTableNames(routedDataSource);
+        // 依赖 DatabaseShardingStrategy 和 TableShardingStrategy 完成背后的路由计算以获取目标 DataSource 以及 Table
+        log.info("ShardingStandardRoutingEngine routeTables availableTargetTables:{}", availableTargetTables);
         Collection<String> routedTables = new LinkedHashSet<>(tableShardingValues.isEmpty() ? availableTargetTables
                 : shardingRule.getTableShardingStrategy(tableRule).doSharding(availableTargetTables, tableShardingValues, properties));
         Collection<DataNode> result = new LinkedList<>();

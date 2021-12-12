@@ -18,6 +18,7 @@
 package org.apache.shardingsphere.sharding.route.engine;
 
 import com.google.common.base.Preconditions;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
 import org.apache.shardingsphere.infra.hint.HintManager;
 import org.apache.shardingsphere.infra.metadata.ShardingSphereMetaData;
@@ -54,34 +55,57 @@ import java.util.Optional;
 /**
  * Sharding route decorator.
  */
+@Slf4j
 public final class ShardingRouteDecorator implements RouteDecorator<ShardingRule> {
     
     @SuppressWarnings("unchecked")
     @Override
     public RouteContext decorate(final RouteContext routeContext, final ShardingSphereMetaData metaData, final ShardingRule shardingRule, final ConfigurationProperties props) {
+        log.info("ShardingRouteDecorator decorate");
         SQLStatementContext sqlStatementContext = routeContext.getSqlStatementContext();
         List<Object> parameters = routeContext.getParameters();
         SQLStatement sqlStatement = sqlStatementContext.getSqlStatement();
+        //对Statement进行校验
         Optional<ShardingStatementValidator> shardingStatementValidator = ShardingStatementValidatorFactory.newInstance(sqlStatement);
         shardingStatementValidator.ifPresent(validator -> validator.preValidate(shardingRule, routeContext, metaData));
+        //创建分片条件
         ShardingConditions shardingConditions = getShardingConditions(parameters, sqlStatementContext, metaData.getSchema().getConfiguredSchemaMetaData(), shardingRule);
+
+        //对可以合并的 ShardingCondition 进行合并。
         boolean needMergeShardingValues = isNeedMergeShardingValues(sqlStatementContext, shardingRule);
         if (sqlStatement instanceof DMLStatement && needMergeShardingValues) {
             checkSubqueryShardingValues(sqlStatementContext, shardingRule, shardingConditions);
             mergeShardingConditions(shardingConditions);
         }
+
+        //获取 RoutingEngine 并执行路由
         ShardingRouteEngine shardingRouteEngine = ShardingRouteEngineFactory.newInstance(shardingRule, metaData, sqlStatementContext, shardingConditions, props);
+        /**
+         * RoutingEngine 的执行结果是 RoutingResult，而 RoutingResult 中包含了一个 RoutingUnit集合
+         */
         RouteResult routeResult = shardingRouteEngine.route(shardingRule);
         shardingStatementValidator.ifPresent(validator -> validator.postValidate(sqlStatement, routeResult));
         return new RouteContext(sqlStatementContext, parameters, routeResult);
     }
 
+    /**
+     * 分片条件的主要目的就是提取用于路由的目标数据库、表和列之间的关系，
+     * InsertClauseShardingConditionEngine 和 WhereClauseShardingConditionEngine
+     * 中的处理逻辑都是为了构建包含这些关系信息的一组 ShardingCondition 对象
+     * @param parameters
+     * @param sqlStatementContext
+     * @param schemaMetaData
+     * @param shardingRule
+     * @return
+     */
     private ShardingConditions getShardingConditions(final List<Object> parameters, final SQLStatementContext sqlStatementContext,
                                                      final SchemaMetaData schemaMetaData, final ShardingRule shardingRule) {
         if (sqlStatementContext.getSqlStatement() instanceof DMLStatement) {
             if (sqlStatementContext instanceof InsertStatementContext) {
+                // 通过 InsertClauseShardingConditionEngine 创建分片条件
                 return new ShardingConditions(new InsertClauseShardingConditionEngine(shardingRule, schemaMetaData).createShardingConditions((InsertStatementContext) sqlStatementContext, parameters));
             }
+            //否则直接通过 WhereClauseShardingConditionEngine 创建分片条件
             return new ShardingConditions(new WhereClauseShardingConditionEngine(shardingRule, schemaMetaData).createShardingConditions(sqlStatementContext, parameters));
         }
         return new ShardingConditions(Collections.emptyList());

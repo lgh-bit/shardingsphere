@@ -38,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * 单播路由，用于获取某一真实表信息的场景，它只需要从任意库中的任意真实表中获取数据即可
  * Sharding unicast routing engine.
  */
 @RequiredArgsConstructor
@@ -51,14 +52,15 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
         String dataSourceName = getRandomDataSourceName(shardingRule.getDataSourceNames());
         RouteMapper dataSourceMapper = new RouteMapper(dataSourceName, dataSourceName);
         if (shardingRule.isAllBroadcastTables(logicTables)) {
+            //如果都是广播表，则对每个logicTable组装TableUnit，再构建RoutingUnit
             List<RouteMapper> tableMappers = new ArrayList<>(logicTables.size());
             for (String each : logicTables) {
                 tableMappers.add(new RouteMapper(each, each));
             }
             result.getRouteUnits().add(new RouteUnit(dataSourceMapper, tableMappers));
-        } else if (logicTables.isEmpty()) {
+        } else if (logicTables.isEmpty()) { //如果表为null，则直接组装RoutingUnit，不用构建TableUnit
             result.getRouteUnits().add(new RouteUnit(dataSourceMapper, Collections.emptyList()));
-        } else if (1 == logicTables.size()) {
+        } else if (1 == logicTables.size()) { //如果只有一张表，则组装RoutingUnit和单个表的TableUnit
             String logicTableName = logicTables.iterator().next();
             if (!shardingRule.findTableRule(logicTableName).isPresent()) {
                 result.getRouteUnits().add(new RouteUnit(dataSourceMapper, Collections.emptyList()));
@@ -68,6 +70,7 @@ public final class ShardingUnicastRoutingEngine implements ShardingRouteEngine {
             result.getRouteUnits().add(new RouteUnit(new RouteMapper(dataNode.getDataSourceName(), dataNode.getDataSourceName()),
                     Collections.singletonList(new RouteMapper(logicTableName, dataNode.getTableName()))));
         } else {
+            //如果存在多个实体表，则先获取DataSource，再组装RoutingUnit和TableUnit
             List<RouteMapper> tableMappers = new ArrayList<>(logicTables.size());
             Set<String> availableDatasourceNames = null;
             boolean first = true;

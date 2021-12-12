@@ -37,6 +37,7 @@ public final class ShardingGeneratedKeyInsertValueParameterRewriter implements P
     
     @Override
     public boolean isNeedRewrite(final SQLStatementContext sqlStatementContext) {
+        //输入的 SQL 应该是一种 InsertSQLStatement，并且只有在路由结果已经包含了 GeneratedKey 的情况下才执行这种改写
         return sqlStatementContext instanceof InsertStatementContext 
                 && ((InsertStatementContext) sqlStatementContext).getGeneratedKeyContext().isPresent() && ((InsertStatementContext) sqlStatementContext).getGeneratedKeyContext().get().isGenerated();
     }

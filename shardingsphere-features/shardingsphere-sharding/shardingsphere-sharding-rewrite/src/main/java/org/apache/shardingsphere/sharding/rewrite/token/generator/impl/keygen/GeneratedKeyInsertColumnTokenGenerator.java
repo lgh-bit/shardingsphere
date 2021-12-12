@@ -43,6 +43,8 @@ public final class GeneratedKeyInsertColumnTokenGenerator extends BaseGeneratedK
         Preconditions.checkState(generatedKey.isPresent());
         Optional<InsertColumnsSegment> sqlSegment = insertStatementContext.getSqlStatement().getInsertColumns();
         Preconditions.checkState(sqlSegment.isPresent());
+        //构建 GeneratedKeyInsertColumnToken
+        //利用在 SQL 解析引擎中获取的 InsertColumnsSegment 以及从用于生成分布式主键的 GeneratedKey 中获取对应的主键列
         return new GeneratedKeyInsertColumnToken(sqlSegment.get().getStopIndex(), generatedKey.get().getColumnName());
     }
 }

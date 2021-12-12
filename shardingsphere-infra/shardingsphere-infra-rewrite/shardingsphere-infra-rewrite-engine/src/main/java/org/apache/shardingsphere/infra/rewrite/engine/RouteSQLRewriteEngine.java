@@ -17,6 +17,7 @@
 
 package org.apache.shardingsphere.infra.rewrite.engine;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.infra.datanode.DataNode;
 import org.apache.shardingsphere.infra.rewrite.context.SQLRewriteContext;
 import org.apache.shardingsphere.infra.rewrite.engine.result.RouteSQLRewriteResult;
@@ -37,6 +38,7 @@ import java.util.Map;
 /**
  * Route SQL rewrite engine.
  */
+@Slf4j
 public final class RouteSQLRewriteEngine {
     
     /**
@@ -51,6 +53,9 @@ public final class RouteSQLRewriteEngine {
         for (RouteUnit each : routeResult.getRouteUnits()) {
             result.put(each, new SQLRewriteUnit(new RouteSQLBuilder(sqlRewriteContext, each).toSQL(), getParameters(sqlRewriteContext.getParameterBuilder(), routeResult, each)));
         }
+        //保存改写结果
+        log.info("RouteSQLRewriteEngine rewrite result:{}", result);
+
         return new RouteSQLRewriteResult(result);
     }
     

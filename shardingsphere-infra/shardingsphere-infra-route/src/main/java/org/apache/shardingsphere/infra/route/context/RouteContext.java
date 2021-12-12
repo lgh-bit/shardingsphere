@@ -29,7 +29,7 @@ import java.util.List;
 @RequiredArgsConstructor
 @Getter
 public final class RouteContext {
-    
+    //SQLStatement 上下文
     private final SQLStatementContext<?> sqlStatementContext;
     
     private final List<Object> parameters;

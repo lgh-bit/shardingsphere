@@ -93,6 +93,7 @@ public final class PreparedStatementExecutor {
             private QueryResult createQueryResult(final Statement statement, final ConnectionMode connectionMode) throws SQLException {
                 PreparedStatement preparedStatement = (PreparedStatement) statement;
                 ResultSet resultSet = preparedStatement.executeQuery();
+                //流式归并|内存归并
                 return ConnectionMode.MEMORY_STRICTLY == connectionMode ? new StreamQueryResult(resultSet) : new MemoryQueryResult(resultSet);
             }
         };

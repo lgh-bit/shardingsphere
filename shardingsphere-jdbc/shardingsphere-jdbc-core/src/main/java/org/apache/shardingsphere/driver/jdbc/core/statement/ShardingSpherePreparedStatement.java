@@ -19,6 +19,7 @@ package org.apache.shardingsphere.driver.jdbc.core.statement;
 
 import com.google.common.base.Strings;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.driver.executor.PreparedStatementExecutor;
 import org.apache.shardingsphere.driver.executor.batch.BatchExecutionUnit;
 import org.apache.shardingsphere.driver.executor.batch.BatchPreparedStatementExecutor;
@@ -75,10 +76,11 @@ import java.util.stream.Collectors;
 /**
  * ShardingSphere prepared statement.
  */
+@Slf4j
 public final class ShardingSpherePreparedStatement extends AbstractPreparedStatementAdapter {
     
     @Getter
-    private final ShardingSphereConnection connection;
+    private final ShardingSphereConnection connection;//分片 Connection
     
     private final SchemaContexts schemaContexts;
     
@@ -134,6 +136,7 @@ public final class ShardingSpherePreparedStatement extends AbstractPreparedState
         this.sql = sql;
         statements = new ArrayList<>();
         parameterSets = new ArrayList<>();
+        //SQL 解析
         sqlStatement = schemaContexts.getDefaultSchemaContext().getRuntimeContext().getSqlParserEngine().parse(sql, true);
         parameterMetaData = new ShardingSphereParameterMetaData(sqlStatement);
         statementOption = returnGeneratedKeys ? new StatementOption(true) : new StatementOption(resultSetType, resultSetConcurrency, resultSetHoldability);
@@ -154,10 +157,12 @@ public final class ShardingSpherePreparedStatement extends AbstractPreparedState
                 Collection<InputGroup<StatementExecuteUnit>> inputGroups = getInputGroups();
                 cacheStatements(inputGroups);
                 reply();
+                //执行
                 queryResults = preparedStatementExecutor.executeQuery(inputGroups);
             } else {
                 queryResults = rawExecutor.executeQuery(getRawInputGroups(), new RawSQLExecutorCallback());
             }
+            //结果归并
             MergedResult mergedResult = mergeQuery(queryResults);
             result = new ShardingSphereResultSet(statements.stream().map(this::getResultSet).collect(Collectors.toList()), mergedResult, this, executionContext);
         } finally {
@@ -255,12 +260,16 @@ public final class ShardingSpherePreparedStatement extends AbstractPreparedState
     }
     
     private ExecutionContext createExecutionContext() {
+        log.info("ShardingSpherePreparedStatement createExecutionContext" );
         SchemaContext schemaContext = schemaContexts.getDefaultSchemaContext();
+        //路由
         RouteContext routeContext = 
                 new DataNodeRouter(schemaContext.getSchema().getMetaData(), schemaContexts.getProps(), schemaContext.getSchema().getRules()).route(sqlStatement, sql, getParameters());
-        SQLRewriteResult sqlRewriteResult = new SQLRewriteEntry(schemaContext.getSchema().getMetaData().getSchema().getConfiguredSchemaMetaData(), 
+        //SQL改写
+        SQLRewriteResult sqlRewriteResult = new SQLRewriteEntry(schemaContext.getSchema().getMetaData().getSchema().getConfiguredSchemaMetaData(),
                 schemaContexts.getProps(), schemaContext.getSchema().getRules()).rewrite(sql, new ArrayList<>(getParameters()), routeContext);
         ExecutionContext result = new ExecutionContext(routeContext.getSqlStatementContext(), ExecutionContextBuilder.build(schemaContext.getSchema().getMetaData(), sqlRewriteResult));
+        //自动生成主键
         findGeneratedKey(result).ifPresent(generatedKey -> generatedValues.add(generatedKey.getGeneratedValues().getLast()));
         logSQL(result);
         return result;

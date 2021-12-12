@@ -80,12 +80,16 @@ public final class ShardingRule implements DataNodeRoutedRule {
     public ShardingRule(final ShardingRuleConfiguration configuration, final Collection<String> dataSourceNames) {
         Preconditions.checkArgument(null != configuration, "ShardingRuleConfig cannot be null.");
         Preconditions.checkArgument(null != dataSourceNames && !dataSourceNames.isEmpty(), "Data sources cannot be empty.");
+        //获取所有的实例数据库
         this.dataSourceNames = getDataSourceNames(configuration.getTables(), dataSourceNames);
         configuration.getShardingAlgorithms().forEach((key, value) -> shardingAlgorithms.put(key, ShardingSphereAlgorithmFactory.createAlgorithm(value, ShardingAlgorithm.class)));
         configuration.getKeyGenerators().forEach((key, value) -> keyGenerators.put(key, ShardingSphereAlgorithmFactory.createAlgorithm(value, KeyGenerateAlgorithm.class)));
+        //表路由规则
         tableRules = new LinkedList<>(createTableRules(configuration.getTables(), configuration.getDefaultKeyGenerateStrategy()));
         tableRules.addAll(createAutoTableRules(configuration.getAutoTables(), configuration.getDefaultKeyGenerateStrategy()));
+        //广播表
         broadcastTables = configuration.getBroadcastTables();
+        //绑定表
         bindingTableRules = createBindingTableRules(configuration.getBindingTableGroups());
         defaultDatabaseShardingStrategy = createDefaultShardingStrategy(configuration.getDefaultDatabaseShardingStrategy());
         defaultTableShardingStrategy = createDefaultShardingStrategy(configuration.getDefaultTableShardingStrategy());

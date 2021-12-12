@@ -35,6 +35,10 @@ import java.util.Map;
 /**
  * Sharding rule configuration for YAML.
  */
+
+/**
+ * 核心配置类
+ */
 @Getter
 @Setter
 public final class YamlShardingRuleConfiguration implements YamlRuleConfiguration {

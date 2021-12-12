@@ -26,12 +26,12 @@ import org.apache.shardingsphere.infra.rewrite.sql.token.generator.OptionalSQLTo
  * Base generated key token generator.
  */
 public abstract class BaseGeneratedKeyTokenGenerator implements OptionalSQLTokenGenerator<InsertStatementContext> {
-    
+    //是否生成 SQLToken
     @Override
     public final boolean isGenerateSQLToken(final SQLStatementContext sqlStatementContext) {
         return sqlStatementContext instanceof InsertStatementContext && ((InsertStatementContext) sqlStatementContext).getGeneratedKeyContext().isPresent()
                 && ((InsertStatementContext) sqlStatementContext).getGeneratedKeyContext().get().isGenerated() && isGenerateSQLToken(((InsertStatementContext) sqlStatementContext).getSqlStatement());
     }
-    
+    //生成 SQLToken
     protected abstract boolean isGenerateSQLToken(InsertStatement insertStatement);
 }

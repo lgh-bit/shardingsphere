@@ -45,7 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class DefaultSQLExecutorCallback<T> implements SQLExecutorCallback<T> {
     
     private static final Map<String, DataSourceMetaData> CACHED_DATASOURCE_METADATA = new ConcurrentHashMap<>();
-    
+    //数据库类型
     private final DatabaseType databaseType;
     
     private final boolean isExceptionThrown;
@@ -66,17 +66,25 @@ public abstract class DefaultSQLExecutorCallback<T> implements SQLExecutorCallba
      * @see <a href="https://github.com/apache/skywalking/blob/master/docs/en/guides/Java-Plugin-Development-Guide.md#user-content-plugin-development-guide">Plugin Development Guide</a>
      */
     private T execute0(final StatementExecuteUnit statementExecuteUnit, final boolean isTrunkThread, final Map<String, Object> dataMap) throws SQLException {
+        //设置 ExecutorExceptionHandler
         ExecutorExceptionHandler.setExceptionThrown(isExceptionThrown);
+        //获取 DataSourceMetaData，这里用到了缓存机制
         DataSourceMetaData dataSourceMetaData = getDataSourceMetaData(statementExecuteUnit.getStorageResource().getConnection().getMetaData());
+        //执行过程事件Hook; 初始化 SQLExecutionHook
         SQLExecutionHook sqlExecutionHook = new SPISQLExecutionHook();
         try {
             ExecutionUnit executionUnit = statementExecuteUnit.getExecutionUnit();
+            //执行前 ;启动执行钩子
             sqlExecutionHook.start(executionUnit.getDataSourceName(), executionUnit.getSqlUnit().getSql(), executionUnit.getSqlUnit().getParameters(), dataSourceMetaData, isTrunkThread, dataMap);
+            //执行 SQL
             T result = executeSQL(executionUnit.getSqlUnit().getSql(), statementExecuteUnit.getStorageResource(), statementExecuteUnit.getConnectionMode());
+            //执行成功 ;成功钩子
             sqlExecutionHook.finishSuccess();
             return result;
         } catch (final SQLException ex) {
+            //执行失败 ;失败钩子
             sqlExecutionHook.finishFailure(ex);
+            //异常处理
             ExecutorExceptionHandler.handleException(ex);
             return null;
         }
@@ -91,6 +99,6 @@ public abstract class DefaultSQLExecutorCallback<T> implements SQLExecutorCallba
         CACHED_DATASOURCE_METADATA.put(url, result);
         return result;
     }
-    
+    //模板设计模式
     protected abstract T executeSQL(String sql, Statement statement, ConnectionMode connectionMode) throws SQLException;
 }

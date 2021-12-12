@@ -49,13 +49,16 @@ import java.util.Map.Entry;
  * Adapter for {@code Connection}.
  */
 public abstract class AbstractConnectionAdapter extends AbstractUnsupportedOperationConnection implements JDBCExecutionConnection {
-    
+
     @Getter
     private final Map<String, DataSource> dataSourceMap;
     
     @Getter
     private final SchemaContexts schemaContexts;
-    
+    /**
+     * 缓存了这个经过封装的 ShardingConnection 背后真实的 Connection 对象。
+     * 如果我们对一个 AbstractConnectionAdapter 重复使用，那么这些 cachedConnections 也会一直被缓存，直到调用 close 方法。
+     */
     @Getter
     private final Multimap<String, Connection> cachedConnections = LinkedHashMultimap.create();
     

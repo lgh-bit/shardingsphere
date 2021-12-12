@@ -29,7 +29,11 @@ import java.util.Collections;
  * Sharding broadcast routing engine for databases.
  */
 public final class ShardingDatabaseBroadcastRoutingEngine implements ShardingRouteEngine {
-    
+    /**
+     * 基于每个 DataSourceName 构建一个 RoutingUnit，然后再拼装成 RoutingResult
+     * @param shardingRule sharding rule
+     * @return
+     */
     @Override
     public RouteResult route(final ShardingRule shardingRule) {
         RouteResult result = new RouteResult();

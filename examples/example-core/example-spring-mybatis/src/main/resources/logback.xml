@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!--
   ~ Licensed to the Apache Software Foundation (ASF) under one or more
   ~ contributor license agreements.  See the NOTICE file distributed with
@@ -16,14 +16,19 @@
   ~ limitations under the License.
   -->
 
-<!DOCTYPE configuration
-        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-config.dtd">
 <configuration>
-    <mappers>
-        <mapper resource="META-INF/mappers/AddressMapper.xml"/>
-        <mapper resource="META-INF/mappers/OrderMapper.xml"/>
-        <mapper resource="META-INF/mappers/OrderItemMapper.xml"/>
-        <mapper resource="META-INF/mappers/DemoFileMapper.xml" />
-    </mappers>
+    <property name="log.context.name" value="shardingsphere-jdbc-spring-namespace-mybatis-example" />
+    <property name="log.charset" value="UTF-8" />
+    <property name="log.pattern" value="[%-5level] %date --%thread-- [%logger] %msg %n" />
+    <contextName>${log.context.name}</contextName>
+    
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder charset="${log.charset}">
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+    </appender>
+    <root>
+        <level value="INFO" />
+        <appender-ref ref="STDOUT" />
+    </root>
 </configuration>

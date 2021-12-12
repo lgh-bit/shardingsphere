@@ -19,6 +19,7 @@ package org.apache.shardingsphere.example.sharding.spring.boot.mybatis;
 
 import org.apache.shardingsphere.example.core.api.ExampleExecuteTemplate;
 import org.apache.shardingsphere.example.core.api.service.ExampleService;
+import org.apache.shardingsphere.example.core.mybatis.service.DemoFileService;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -35,7 +36,24 @@ public class ExampleMain {
     
     public static void main(final String[] args) throws SQLException {
         try (ConfigurableApplicationContext applicationContext = SpringApplication.run(ExampleMain.class, args)) {
-            ExampleExecuteTemplate.run(applicationContext.getBean(ExampleService.class));
+            ExampleService bean = applicationContext.getBean(ExampleService.class);
+            if (bean instanceof DemoFileService) {
+                ExampleExecuteTemplate.run(bean);
+            }
+
         }
     }
 }
+
+/**
+ * [INFO ] 2021-02-22 22:42:43,911 --main-- [org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSpherePreparedStatement] ShardingSpherePreparedStatement createExecutionContext
+ * [INFO ] 2021-02-22 22:42:43,911 --main-- [org.apache.shardingsphere.infra.route.DataNodeRouter] DataNodeRouter route executeRoute className:DataNodeRouter
+ * [INFO ] 2021-02-22 22:42:43,916 --main-- [org.apache.shardingsphere.sharding.route.engine.ShardingRouteDecorator] ShardingRouteDecorator decorate
+ * [INFO ] 2021-02-22 22:42:44,009 --main-- [org.apache.shardingsphere.sharding.route.engine.type.standard.ShardingStandardRoutingEngine] ShardingStandardRoutingEngine routeTables availableTargetTables:[demo_file_0, demo_file_1, demo_file_2, demo_file_3]
+ * [INFO ] 2021-02-22 22:42:44,026 --main-- [org.apache.shardingsphere.infra.rewrite.engine.RouteSQLRewriteEngine] RouteSQLRewriteEngine rewrite result:{RouteUnit(dataSourceMapper=RouteMapper(logicName=ds, actualName=ds), tableMappers=[RouteMapper(logicName=demo_file, actualName=demo_file_2)])=org.apache.shardingsphere.infra.rewrite.engine.result.SQLRewriteUnit@445bce9a}
+ * [INFO ] 2021-02-22 22:42:44,031 --main-- [org.apache.shardingsphere.driver.jdbc.core.statement.ShardingSpherePreparedStatement] ShardingSpherePreparedStatement createExecutionContext
+ * [INFO ] 2021-02-22 22:42:44,031 --main-- [org.apache.shardingsphere.infra.route.DataNodeRouter] DataNodeRouter route executeRoute className:DataNodeRouter
+ * [INFO ] 2021-02-22 22:42:44,031 --main-- [org.apache.shardingsphere.sharding.route.engine.ShardingRouteDecorator] ShardingRouteDecorator decorate
+ * [INFO ] 2021-02-22 22:42:44,031 --main-- [org.apache.shardingsphere.sharding.route.engine.type.standard.ShardingStandardRoutingEngine] ShardingStandardRoutingEngine routeTables availableTargetTables:[demo_file_0, demo_file_1, demo_file_2, demo_file_3]
+ * [INFO ] 2021-02-22 22:42:44,032 --main-- [org.apache.shardingsphere.infra.rewrite.engine.RouteSQLRewriteEngine] RouteSQLRewriteEngine rewrite result:{RouteUnit(dataSourceMapper=RouteMapper(logicName=ds, actualName=ds), tableMappers=[RouteMapper(logicName=demo_file, actualName=demo_file_2)])=org.apache.shardingsphere.infra.rewrite.engine.result.SQLRewriteUnit@72557746}
+ */

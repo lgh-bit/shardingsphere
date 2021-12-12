@@ -83,7 +83,7 @@ public final class BindingTableRule {
     Collection<String> getAllLogicTables() {
         return tableRules.stream().map(input -> input.getLogicTable().toLowerCase()).collect(Collectors.toList());
     }
-    
+    // logicTable 获取 actualTable
     Map<String, String> getLogicAndActualTables(final String dataSource, final String logicTable, final String actualTable, final Collection<String> availableLogicBindingTables) {
         Map<String, String> result = new LinkedHashMap<>();
         for (String each : availableLogicBindingTables) {
